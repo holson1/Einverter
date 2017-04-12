@@ -4,6 +4,7 @@ function preload() {
 
     //game.load.image('bow', 'img/bow.png');
     game.load.spritesheet('bow', 'img/bow_sheet.png', 192, 96, 14);
+    game.load.image('shot', 'img/shot.png');
 }
 
 var player;
@@ -12,6 +13,8 @@ function create() {
 
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
+
+    game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
 
     // The player and its settings
     player = game.add.sprite(0, game.world.height - 150, 'bow', 0);
@@ -24,7 +27,12 @@ function create() {
 
     //  animations
     player.animations.add('draw', [0, 1, 2, 3, 4, 5, 6, 7], 30, false);
-    player.animations.add('shoot', [9, 11, 12, 13, 12], 30, false);
+    player.animations.add('shoot', [11, 12, 13], 30, false);
+
+    /* cool colors
+    0xff3355 - pinkish red
+    0x00ffcc - tealish green
+    */
 
     /*
     //  Finally some stars to collect
@@ -50,16 +58,32 @@ function create() {
     cursors = game.input.keyboard.createCursorKeys();
     */
     
-    // mouse button pressed
+    // left mouse button pressed
     game.input.activePointer.leftButton.onDown.add(function() {
         //console.log("mouse pressed");
         player.animations.play('draw');
     }, this);
 
-    // mouse button released
+    // left mouse button released
     game.input.activePointer.leftButton.onUp.add(function() {
         //console.log("mouse released");
         player.animations.play('shoot');
+
+        // draw the shot - ideally when the animation ends
+        var y = (player.height / 2) + player.y - 4;
+
+        var shot = game.add.sprite(100, y, 'shot', 0);
+        //shot.tint = 0xff3355;
+        setTimeout(function() {
+            shot.destroy();
+        }, 50);
+        
+    }, this);
+
+    // right mouse button released inverts
+    game.input.activePointer.rightButton.onUp.add(function() {
+        player.tint = 0x00ffcc;
+        //game.stage.backgroundColor = "#FFFFFF"
     }, this);
 }
 
