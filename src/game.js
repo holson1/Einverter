@@ -11,18 +11,19 @@ var player;
 
 function create() {
 
-    //  We're going to be using physics, so enable the Arcade Physics system
-    game.physics.startSystem(Phaser.Physics.ARCADE);
+    
 
     game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
 
     // The player and its settings
-    player = game.add.sprite(0, game.world.height - 150, 'bow', 0);
+    player = game.add.sprite(0, (game.world.height / 2), 'bow', 0);
+
+    //  We're going to be using physics, so enable the Arcade Physics system
+    game.physics.startSystem(Phaser.Physics.ARCADE);
 
     //  We need to enable physics on the player
     game.physics.arcade.enable(player);
 
-    //  Player physics properties. Give the little guy a slight bounce.
     player.body.collideWorldBounds = true;
 
     //  animations
@@ -89,10 +90,29 @@ function create() {
 
 function update() {
 
-    //game.physics.arcade.moveToPointer(player, 1000);
+
     var pos = game.input.activePointer.position;
-    player.y = pos.y;
-    //if (player.y + player.height <= 590) {
+
+    // bottom bound
+    if (pos.y > game.world.height - (player.height / 2)) {
+        player.y = game.world.height - player.height;
+    }
+    // top bound
+    else if (pos.y < player.height / 2) {
+        player.y = 0;
+    }
+    // otherwise
+    else {
+        player.y = pos.y - (player.height / 2);
+    }
+    //else {
+    //    console.log(player.y + player.height);
+    //    player.y = 500 - player.height;
+    //}
+    
+    
+    
+    // use this to ensure we charge the bow fully
     if (game.input.activePointer.leftButton.isDown) {
         //player.animations.play('draw');
     }
