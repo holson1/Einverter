@@ -1,22 +1,22 @@
-var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update });
+var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
+var player;
 
 function preload() {
 
     //game.load.image('bow', 'img/bow.png');
     game.load.spritesheet('bow', 'img/bow_sheet.png', 192, 96, 14);
+    game.load.spritesheet('orb', 'img/orb_sheet.png', 96, 96, 6);
     game.load.image('shot', 'img/shot.png');
 }
 
-var player;
-
 function create() {
 
-    
-
+    // disable right-click
     game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
 
     // The player and its settings
     player = game.add.sprite(0, (game.world.height / 2), 'bow', 0);
+
 
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -24,16 +24,36 @@ function create() {
     //  We need to enable physics on the player
     game.physics.arcade.enable(player);
 
-    player.body.collideWorldBounds = true;
 
     //  animations
     player.animations.add('draw', [0, 1, 2, 3, 4, 5, 6, 7], 30, false);
     player.animations.add('shoot', [11, 12, 13], 30, false);
 
+    //game.stage.backgroundColor = "#000000";
+    game.invert = false;
+
     /* cool colors
     0xff3355 - pinkish red
     0x00ffcc - tealish green
     */
+
+    // set up shots
+    shots = game.add.group();
+    shots.enableBody = true;
+    shots.physicsBodyType = Phaser.Physics.ARCADE;
+
+    // set up orbs 
+    orbs = game.add.group();
+    orbs.enableBody = true;
+    orbs.physicsBodyType = Phaser.Physics.ARCADE;
+    
+    for (var i=0; i<20; i++) {
+        var orb = orbs.create(500 + (Math.random() * 400), game.world.randomY, 'orb', 0);
+        orb.body.setCircle(24, 23, 22);
+        var anim = orb.animations.add('pop', [1, 2, 3, 4, 5], 30, false);
+        anim.onComplete.add(animationStopped, this);
+    }
+    
 
     /*
     //  Finally some stars to collect
@@ -73,8 +93,8 @@ function create() {
         // draw the shot - ideally when the animation ends
         var y = (player.height / 2) + player.y - 4;
 
-        var shot = game.add.sprite(100, y, 'shot', 0);
-        //shot.tint = 0xff3355;
+        var shot = shots.create(100, y, 'shot', 0);
+        shot.tint = game.invert ? "0x00" : "0xffffff";
         setTimeout(function() {
             shot.destroy();
         }, 50);
@@ -82,10 +102,7 @@ function create() {
     }, this);
 
     // right mouse button released inverts
-    game.input.activePointer.rightButton.onUp.add(function() {
-        player.tint = 0x00ffcc;
-        //game.stage.backgroundColor = "#FFFFFF"
-    }, this);
+    game.input.activePointer.rightButton.onUp.add(invert, this);
 }
 
 function update() {
@@ -105,19 +122,15 @@ function update() {
     else {
         player.y = pos.y - (player.height / 2);
     }
-    //else {
-    //    console.log(player.y + player.height);
-    //    player.y = 500 - player.height;
-    //}
-    
-    
+        
     
     // use this to ensure we charge the bow fully
     if (game.input.activePointer.leftButton.isDown) {
         //player.animations.play('draw');
     }
 
-
+    // check to see if an arrow collides with an orb
+    game.physics.arcade.overlap(shots, orbs, collisionHandler, null, this);
 
     /*
     //  Collide the player and the stars with the platforms
@@ -159,4 +172,31 @@ function update() {
     }
     */
 
+}
+
+// debugging stuff
+function render () {
+    // enable debug
+    /*
+    game.debug.body(player);
+
+    for (let orb of orbs.children) {
+        game.debug.body(orb);
+    }
+    */
+}
+
+function invert() {
+    game.invert = (game.invert ? false : true);
+    game.stage.backgroundColor = (game.stage.backgroundColor == 0 ? '#FFFFFF' : '#000000');
+    player.tint = (player.tint == '0x00' ? '0xffffff' : '0x00');
+}
+
+function collisionHandler(shot, orb) {
+    shot.kill();
+    orb.animations.play('pop');
+}
+
+function animationStopped(sprite, animation) {
+    sprite.kill();
 }
