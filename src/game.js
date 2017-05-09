@@ -1,12 +1,37 @@
 var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
 var player;
 
+var audioJSON = {
+    spritemap: {
+        'part1': {
+            start: 0,
+            end: 40,
+            loop: false
+        },
+        'part2': {
+            start: 40,
+            end: 144,
+            loop: true
+        }
+    }
+};
+
 function preload() {
 
+    // images
     game.load.spritesheet('bow', 'img/bow_sheet.png', 192, 96, 14);
     game.load.spritesheet('orb', 'img/orb_sheet.png', 96, 96, 6);
     game.load.image('shot', 'img/shot_small.png');
     game.load.image('particle', 'img/particle.png');
+
+    // music
+    game.load.audio('mainTheme', 'sound/Alpha_Inverter.ogg')
+
+    // sounds
+    game.load.audio('pop', 'sound/pop2.wav');
+    game.load.audio('draw', 'sound/draw2.wav');
+    game.load.audio('crit', 'sound/crit1.wav');
+    game.load.audio('fire', 'sound/fire.wav');
 }
 
 function create() {
@@ -63,35 +88,34 @@ function create() {
     // game clock
     clock = 5;
 
-    /*
-    //  Finally some stars to collect
-    stars = game.add.group();
+    // sounds
+    pop = game.add.audio('pop');
+    crit = game.add.audio('crit');
+    draw = game.add.audio('draw');
+    fire = game.add.audio('fire');
 
-    //  We will enable physics for any star that is created in this group
-    stars.enableBody = true;
+    // music
+    mainTheme = game.add.audio('mainTheme')
+    mainTheme.addMarker('intro', 0, 40.425);
+    mainTheme.addMarker('loop', 40.425, 103.575, 1, true);
 
-    //  Here we'll create 12 of them evenly spaced apart
-    for (var i = 0; i < 12; i++)
-    {
-        //  Create a star inside of the 'stars' group
-        var star = stars.create(i * 70, 0, 'star');
+    mainTheme.play('intro');
 
-        //  Let gravity do its thing
-        star.body.gravity.y = 300;
+    // play the loop only after the intro
+    mainTheme.onStop.add(function() {
+        if (mainTheme.currentMarker !== 'loop') {
+            mainTheme.play('loop');
+        }
+    }, this);
 
-        //  This just gives each star a slightly random bounce value
-        star.body.bounce.y = 0.7 + Math.random() * 0.2;
-    }
-
-    //  Our controls.
-    cursors = game.input.keyboard.createCursorKeys();
-    */
     
     // left mouse button pressed
     game.input.activePointer.leftButton.onDown.add(function() {
         //console.log("mouse pressed");
         player.animations.play('draw');
+        draw.play();
     }, this);
+
 
     // left mouse button released
     // this can be put into a shoot function
@@ -103,6 +127,7 @@ function create() {
             // draw the shot - ideally when the animation ends
             var y = (player.height / 2) + player.y - 4;
 
+            fire.play();
             var shot = shots.create(0, y, 'shot', 0);
             shot.active = true;
             shot.tint = game.invert ? "0x00" : "0xffffff";
@@ -165,47 +190,6 @@ function update() {
     else {
         clock--;
     }
-
-    /*
-    //  Collide the player and the stars with the platforms
-    game.physics.arcade.collide(player, platforms);
-    game.physics.arcade.collide(stars, platforms);
-
-    //  Checks to see if the player overlaps with any of the stars, if he does call the collectStar function
-    game.physics.arcade.overlap(player, stars, collectStar, null, this);
-
-    //  Reset the players velocity (movement)
-    player.body.velocity.x = 0;
-
-    if (cursors.left.isDown)
-    {
-        //  Move to the left
-        player.body.velocity.x = -150;
-
-        player.animations.play('left');
-    }
-    else if (cursors.right.isDown)
-    {
-        //  Move to the right
-        player.body.velocity.x = 150;
-
-        player.animations.play('right');
-    }
-    else
-    {
-        //  Stand still
-        player.animations.stop();
-
-        player.frame = 4;
-    }
-    
-    //  Allow the player to jump if they are touching the ground.
-    if (cursors.up.isDown && player.body.touching.down)
-    {
-        player.body.velocity.y = -350;
-    }
-    */
-
 }
 
 // debugging stuff
@@ -235,6 +219,9 @@ function collisionHandler(shot, orb) {
             shot.body.velocity.x = 100;
             orb.body.velocity.x = 50;
             orb.body.velocity.y = 0;
+            if (! crit.isPlaying) {
+                crit.play();
+            }
             setTimeout(function() {
                     shot.kill();
                     orb.animations.play('pop');
@@ -248,6 +235,7 @@ function collisionHandler(shot, orb) {
             setTimeout(function() {
                 shot.kill();
             }, 10);
+            pop.play();
             orb.animations.play('pop');
         }
     }
