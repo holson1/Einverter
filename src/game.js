@@ -1,21 +1,6 @@
 var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
 var player;
 
-var audioJSON = {
-    spritemap: {
-        'part1': {
-            start: 0,
-            end: 40,
-            loop: false
-        },
-        'part2': {
-            start: 40,
-            end: 144,
-            loop: true
-        }
-    }
-};
-
 function preload() {
 
     // images
@@ -148,6 +133,14 @@ function create() {
 
 function update() {
 
+    // use this to ensure we charge the bow fully
+    if (game.input.activePointer.leftButton.isDown) {
+        //player.animations.play('draw');
+
+        // this could be interesting... angling shots
+        //player.rotation = game.physics.arcade.angleToPointer(player);
+    }
+
     var pos = game.input.activePointer.position;
 
     // bottom bound
@@ -162,12 +155,6 @@ function update() {
     else {
         player.y = pos.y - (player.height / 2);
     }
-        
-    
-    // use this to ensure we charge the bow fully
-    if (game.input.activePointer.leftButton.isDown) {
-        //player.animations.play('draw');
-    }
 
     // check to see if an arrow collides with an orb
     game.physics.arcade.overlap(shots, orbs, collisionHandler, null, this);
@@ -176,9 +163,10 @@ function update() {
     // create an orb
     // make this a function
     if (clock == 0) {
-        var orb = orbs.create(350 + (Math.random() * 650), game.world.height, 'orb', 0);
+        var orb = orbs.create(350 + (Math.random() * 600), game.world.height, 'orb', 0);
         orb.body.setCircle(24, 23, 22);
         var rand_num = Math.random();
+        orb.body.acceleration.x = (rand_num - 0.5) * 2;
         orb.body.velocity.y = Math.min(rand_num * 150 * -1, -20);
         orb.tint = rand_num * 0xffffff;
         orb.alpha = Math.max(rand_num, 0.3);
@@ -195,6 +183,7 @@ function update() {
 // debugging stuff
 function render () {
     // enable debug
+    
     /*
     game.debug.body(player);
 
@@ -222,9 +211,12 @@ function collisionHandler(shot, orb) {
             if (! crit.isPlaying) {
                 crit.play();
             }
+            game.stage.backgroundColor = orb.tint;
+
             setTimeout(function() {
                     shot.kill();
                     orb.animations.play('pop');
+                    game.stage.backgroundColor = 0x000000;
             }, 400);
         }
         // normal hit
