@@ -1,5 +1,10 @@
-var game = new Phaser.Game(1000, 600, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
+// globals
+var game = new Phaser.Game(1000, 655, Phaser.AUTO, '', { preload: preload, create: create, update: update, render: render });
 var player;
+var shots;
+var orbs;
+var scoreboard;
+var graphics;
 
 function preload() {
 
@@ -8,6 +13,7 @@ function preload() {
     game.load.spritesheet('orb', 'img/orb_sheet.png', 96, 96, 6);
     game.load.image('shot', 'img/shot_small.png');
     game.load.image('particle', 'img/particle.png');
+    game.load.spritesheet('scoreboard', 'img/scoreboard-sheet.png', 1000, 50, 8);
 
     // music
     game.load.audio('mainTheme', 'sound/Alpha_Inverter.ogg')
@@ -24,9 +30,25 @@ function create() {
     // disable right-click
     game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
 
+    // SCORE PANEL
+    game.world.borderHeight = 600;
+
+    // draw the score area
+    scoreboard = game.add.sprite(0, 600, 'scoreboard', 0);
+    scoreboard.animations.add('flush', [1, 2, 3, 4, 5, 6, 7, 0], 30, false);
+    scoreboard.text = game.add.text(100, 610, "000000", {
+        font: "22px Courier",
+        fill: "#ffffff",
+        align: "left"
+    });
+    game.score = 0;
+    game.r = game.g = game.b = 1000;
+    //scoreboard.text.anchor.setTo(0.5, 0.5);
+
     // The player and its settings
-    player = game.add.sprite(0, (game.world.height / 2), 'bow', 0);
+    player = game.add.sprite(0, (game.world.borderHeight / 2), 'bow', 0);
     player.ready = false;
+    player.shoot = shoot;
 
     //  We're going to be using physics, so enable the Arcade Physics system
     game.physics.startSystem(Phaser.Physics.ARCADE);
@@ -34,19 +56,13 @@ function create() {
     //  We need to enable physics on the player
     game.physics.arcade.enable(player);
 
-
-    //  animations
+    // player animations
     drawAnim = player.animations.add('draw', [0, 1, 2, 3, 4, 5, 6, 7], 30, false);
     drawAnim.onComplete.add(bowDrawn, this);
     player.animations.add('shoot', [11, 12, 13], 30, false);
 
     //game.stage.backgroundColor = "#000000";
     game.invert = false;
-
-    /* cool colors
-    0xff3355 - pinkish red
-    0x00ffcc - tealish green
-    */
 
     // set up shots
     shots = game.add.group();
@@ -57,23 +73,19 @@ function create() {
     orbs = game.add.group();
     orbs.enableBody = true;
     orbs.physicsBodyType = Phaser.Physics.ARCADE;
-    
-    // for (var i=0; i<20; i++) {
-    //     var orb = orbs.create(500 + (Math.random() * 400), game.world.randomY, 'orb', 0);
-    //     orb.body.setCircle(24, 23, 22);
-    //     var anim = orb.animations.add('pop', [1, 2, 3, 4, 5], 30, false);
-    //     anim.onComplete.add(animationStopped, this);
-    // }
-    
+    orbs.spawnClock = 30;
+    orbs.spawnOrb = spawnOrb;
+
     // particles
+    /*
     emitter = game.add.emitter(0, 0, 100);
-
     emitter.makeParticles('particle');
+    */
 
-    // game clock
-    clock = 5;
+    /*
+    SOUND REGISTRATION
+    */
 
-    // sounds
     pop = game.add.audio('pop');
     crit = game.add.audio('crit');
     draw = game.add.audio('draw');
@@ -94,58 +106,47 @@ function create() {
     }, this);
 
     
+    /*
+    EVENT HANDLERS
+    */
+
     // left mouse button pressed
     game.input.activePointer.leftButton.onDown.add(function() {
         //console.log("mouse pressed");
         player.animations.play('draw');
+        // this is a sound - could use sound manager obj here
         draw.play();
     }, this);
 
 
     // left mouse button released
-    // this can be put into a shoot function
     game.input.activePointer.leftButton.onUp.add(function() {
         player.animations.play('shoot');
         //console.log("mouse released");
 
         if (player.ready) {
-            // draw the shot - ideally when the animation ends
-            var y = (player.height / 2) + player.y - 4;
+            player.shoot(shots);
 
-            fire.play();
-            var shot = shots.create(0, y, 'shot', 0);
-            shot.active = true;
-            shot.tint = game.invert ? "0x00" : "0xffffff";
-            shot.critical = false;
-
-            shot.body.velocity.x = 7000;
-            shot.checkWorldBounds = true;
-            shot.events.onOutOfBounds.add(shot.kill, this);
-
-            player.ready = false;
+            // TODO: make these constants
+            game.r -= 100;
+            game.g -= 100;
+            game.b -= 100;
         }
         
     }, this);
-
-    // right mouse button released inverts
-    game.input.activePointer.rightButton.onUp.add(invert, this);
 }
 
 function update() {
 
-    // use this to ensure we charge the bow fully
-    if (game.input.activePointer.leftButton.isDown) {
-        //player.animations.play('draw');
-
-        // this could be interesting... angling shots
-        //player.rotation = game.physics.arcade.angleToPointer(player);
-    }
+    /*
+    PLAYER POSITION
+    */
 
     var pos = game.input.activePointer.position;
 
     // bottom bound
-    if (pos.y > game.world.height - (player.height / 2)) {
-        player.y = game.world.height - player.height;
+    if (pos.y > game.world.borderHeight - (player.height / 2)) {
+        player.y = game.world.borderHeight - player.height;
     }
     // top bound
     else if (pos.y < player.height / 2) {
@@ -156,28 +157,25 @@ function update() {
         player.y = pos.y - (player.height / 2);
     }
 
+
     // check to see if an arrow collides with an orb
     game.physics.arcade.overlap(shots, orbs, collisionHandler, null, this);
 
 
     // create an orb
-    // make this a function
-    if (clock == 0) {
-        var orb = orbs.create(350 + (Math.random() * 600), game.world.height, 'orb', 0);
-        orb.body.setCircle(24, 23, 22);
-        var rand_num = Math.random();
-        orb.body.acceleration.x = (rand_num - 0.5) * 2;
-        orb.body.velocity.y = Math.min(rand_num * 150 * -1, -20);
-        orb.tint = rand_num * 0xffffff;
-        orb.alpha = Math.max(rand_num, 0.3);
-        var anim = orb.animations.add('pop', [1, 2, 3, 4, 5], 30, false);
-        anim.onComplete.add(animationStopped, this);
-        
-        clock = 20;
+    if (orbs.spawnClock == 0) {
+        orbs.spawnOrb();
     }
     else {
-        clock--;
+        orbs.spawnClock--;
     }
+
+    // ensures the score board stays at the top
+    game.world.bringToTop(scoreboard);
+
+    // update the score
+    scoreboard.text.setText(game.score + " r:" + game.r + " g:" + game.g + " b:" + game.b);
+    
 }
 
 // debugging stuff
@@ -230,13 +228,82 @@ function collisionHandler(shot, orb) {
             pop.play();
             orb.animations.play('pop');
         }
+
+        scoreboard.animations.play('flush');
+
+        if (shot.critical) {
+            game.score += 1;
+        }
+        else {
+            // test stripping rgb values
+            var hexStr = orb.tint.toString(16);
+
+            // TODO: make a function to do this
+            var rHex = hexStr[0] + hexStr[1];
+            var rVal = parseInt("0x" + rHex);
+            game.r += rVal;
+
+            var gHex = hexStr[2] + hexStr[3];
+            var gVal = parseInt("0x" + gHex);
+            game.g += gVal;
+
+            var bHex = hexStr[4] + hexStr[5];
+            var bVal = parseInt("0x" + bHex);
+            game.b += bVal;
+
+            game.score += 10;
+        }
     }
 }
 
-function animationStopped(sprite, animation) {
+function cleanupAfterAnimation(sprite, animation) {
     sprite.kill();
 }
 
 function bowDrawn(player, animation) {
     player.ready = true;
+}
+
+// handle shooting
+// player.shoot
+function shoot(shots) {
+    
+    this.animations.play('shoot');
+    //console.log("mouse released");
+
+    if (this.ready) {
+        // draw the shot - ideally when the animation ends
+        var y = (this.height / 2) + this.y - 4;
+        fire.play();
+        createShot(y, shots);
+        this.ready = false;
+    }
+}
+
+// create a new shot
+function createShot(y, shots) {
+    var shot = shots.create(0, y, 'shot', 0);
+    shot.active = true;
+    shot.critical = false;
+
+    shot.body.velocity.x = 7000;
+    shot.checkWorldBounds = true;
+    shot.events.onOutOfBounds.add(shot.kill, this);
+}
+
+// spawn a new random orb
+// orbs.spawnOrb
+function spawnOrb() {
+
+    var orb = this.create(400 + (Math.random() * 600), game.world.borderHeight, 'orb', 0);
+    orb.body.setCircle(24, 23, 22);
+    var rand_num = Math.random();
+    // orb.body.acceleration.x = (rand_num - 0.5) * 2;
+    orb.body.velocity.y = Math.min(rand_num * -150, -30);
+    orb.tint = Math.floor(rand_num * 0xffffff);
+    orb.alpha = Math.max(rand_num, 0.4);
+    var anim = orb.animations.add('pop', [1, 2, 3, 4, 5], 30, false);
+    anim.onComplete.add(cleanupAfterAnimation, this);
+    
+    this.spawnClock = 30;
 }
