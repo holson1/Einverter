@@ -3,6 +3,7 @@ var game = new Phaser.Game(1000, 605, Phaser.AUTO, '', { preload: preload, creat
 var player;
 var shots;
 var orbs;
+var batteries;
 var scoreboard;
 var graphics;
 
@@ -34,31 +35,39 @@ function create() {
 
     game.world.borderHeight = 550;
 
+    // Initialize the scoring
+    game.score = 0;
+    game.level = 1;
+
+
     // draw the score area
     scoreboard = game.add.sprite(0, 550, 'scoreboard', 0);
-    // TODO: make a batteries group
-    // battery objects should have a 'defaultColor' property
-    batteryRed = game.add.sprite(515, 555, 'battery', 0);
-    batteryRed.tint = 0xff0000;
-    batteryGreen = game.add.sprite(665, 555, 'battery', 0);
-    batteryGreen.tint = 0x00ff00;
-    batteryBlue = game.add.sprite(815, 555, 'battery', 0);
-    batteryBlue.tint = 0x0000ff;
+
+    // batteries object holds information on each battery
+    batteries = game.add.group();
+    batteries.HEIGHT = 555;
+    batteries.START_VAL = 1000;
+    batteries.FULL_VAL = 2000;
+    batteries.MAX_VAL = 2300;
+
+    battery_config = [
+        {'tint': 0xff0000, 'x': 515},
+        {'tint': 0x00ff00, 'x': 665},
+        {'tint': 0x0000ff, 'x': 815},
+    ]
+
+    for (let i=0; i < battery_config.length; i++) {
+        let battery = batteries.create(battery_config[i].x, batteries.HEIGHT, 'battery', 0);
+        battery.defaultTint = battery.tint = battery_config[i].tint;
+        battery.val = batteries.START_VAL;
+    }
+
     scoreboard.animations.add('flush', [1, 2, 3, 4, 5, 6, 7, 0], 30, false);
     scoreboard.text = game.add.text(100, 580, "000000", {
         font: "15px Courier",
         fill: "#ffffff",
         align: "left"
     });
-
-    // some constants that can probably go elsewhere
-    game.START_VAL = 1000;
-    game.FULL_VAL = 2000;
-    game.MAX_VAL = 2300;
-    // Initialize the scoring
-    game.score = 0;
-    game.r = game.g = game.b = game.START_VAL;
-    game.level = 1;
 
     // The player and its settings
     player = game.add.sprite(0, (game.world.borderHeight / 2), 'bow', 0);
@@ -76,9 +85,6 @@ function create() {
     drawAnim.onComplete.add(bowDrawn, this);
     player.animations.add('shoot', [11, 12, 13], 30, false);
 
-    //game.stage.backgroundColor = "#000000";
-    game.invert = false;
-
     // set up shots
     shots = game.add.group();
     shots.enableBody = true;
@@ -90,12 +96,6 @@ function create() {
     orbs.physicsBodyType = Phaser.Physics.ARCADE;
     orbs.spawnClock = 30;
     orbs.spawnOrb = spawnOrb;
-
-    // particles
-    /*
-    emitter = game.add.emitter(0, 0, 100);
-    emitter.makeParticles('particle');
-    */
 
     /*
     SOUND REGISTRATION
@@ -145,9 +145,7 @@ function create() {
         //console.log("mouse released");
 
         if (player.ready) {
-            player.shoot(shots);
-
-            
+            player.shoot(shots);      
         }
         
     }, this);
@@ -192,52 +190,48 @@ function update() {
 
     // TODO: batteries should be in a group and game.r, game.g, etc. should be in an array called game.colors[]
     // This will make it much easier to programmatically update the batteries
-    var scaleConstant = game.FULL_VAL / 9;
-    if (game.r >= game.FULL_VAL) {
-        batteryRed.frame = 8;
-        batteryRed.tint = (batteryRed.tint == '0xffffff' ? '0xff0000' : '0xffffff');
-    }
-    else {
-        var frameR = Math.floor(game.r / scaleConstant);
-        batteryRed.frame = frameR;
-    }
-    if (game.g >= game.FULL_VAL) {
-        batteryGreen.frame = 8;
-        batteryGreen.tint = (batteryGreen.tint == '0xffffff' ? '0x00ff00' : '0xffffff');
-    }
-    else {
-        var frameG = Math.floor(game.g / scaleConstant);
-        batteryGreen.frame = frameG;
-    }
-    if (game.b >= game.FULL_VAL) {
-        batteryBlue.frame = 8;
-        batteryBlue.tint = (batteryBlue.tint == '0xffffff' ? '0x0000ff' : '0xffffff');
-    }
-    else {
-        var frameB = Math.floor(game.b / scaleConstant);
-        batteryBlue.frame = frameB;
-    }
+    var scaleConstant = batteries.FULL_VAL / 9;
 
+    for (let i = 0; i < batteries.children.length; i++) {
+        let battery = batteries.children[i];
+        
+        if (battery.val >= batteries.FULL_VAL) {
+            battery.frame = 8;
+            battery.tint = (battery.tint == '0xffffff' ? battery.defaultTint : '0xffffff');
+        }
+        else {
+            battery.frame = Math.floor(battery.val / scaleConstant);
+        }
+    }
 
     // check for level ups
     // TODO: make level up function
-    if (game.r >= 2000 && game.g >= 2000 && game.b >= 2000) {
+    var canLevelUp = true;
+    for (let i = 0; i < batteries.children.length; i++) {
+        if (batteries.children[i].val < batteries.FULL_VAL) {
+            canLevelUp = false;
+        }
+    }
+
+    if (canLevelUp) {
         levelup.play();
         game.level++;
-        game.r = game.g = game.b = game.START_VAL;
-        batteryRed.tint = '0xff0000';
-        batteryGreen.tint = '0x00ff00';
-        batteryBlue.tint = '0x0000ff';
+
+        for (let i = 0; i < batteries.children.length; i++) {
+            batteries.children[i].val = batteries.START_VAL;
+            batteries.children[i].tint = batteries.children[i].defaultTint;
+        }
     }
+
+    // TODO: check for gameover
 
     // ensures the score board stays at the top
     game.world.bringToTop(scoreboard);
-    game.world.bringToTop(batteryRed);
-    game.world.bringToTop(batteryGreen);
-    game.world.bringToTop(batteryBlue);
+    game.world.bringToTop(batteries);
+
     // update the scoreboard
     // TODO: make this a function
-    scoreboard.text.setText(game.score + " lvl: " + game.level + " r:" + game.r + " g:" + game.g + " b:" + game.b);
+    scoreboard.text.setText(game.score + " lvl: " + game.level);
     
 }
 
@@ -294,21 +288,19 @@ function collisionHandler(shot, orb) {
             game.score += 1;
         }
         else {
+            // TODO: make this a function
             // strip rgb values
             var hexStr = ("000000" + (+orb.tint).toString(16)).slice(-6);
+            var hexArr = [hexStr.substring(0, 2),
+                          hexStr.substring(2, 4),
+                          hexStr.substring(4)]
 
-            // TODO: make a function to do this
-            var rHex = hexStr[0] + hexStr[1];
-            var rVal = parseInt("0x" + rHex);
-            game.r += rVal;
+            console.log(hexArr);
 
-            var gHex = hexStr[2] + hexStr[3];
-            var gVal = parseInt("0x" + gHex);
-            game.g += gVal;
-
-            var bHex = hexStr[4] + hexStr[5];
-            var bVal = parseInt("0x" + bHex);
-            game.b += bVal;
+            for (let i = 0; i < batteries.children.length; i++) {
+                var convertedVal = parseInt("0x" + hexArr[i]);
+                batteries.children[i].val += convertedVal;
+            }
 
             game.score += 10;
         }
@@ -331,9 +323,9 @@ function shoot(shots) {
         // detract score
         // TODO: make these constants
         // 100 seems balanced
-        game.r -= 50;
-        game.g -= 50;
-        game.b -= 50;
+        for (let i = 0; i < batteries.children.length; i++) {
+            batteries.children[i].val -=50;
+        }
 
         // draw the shot - ideally when the animation ends
         var y = (this.height / 2) + this.y - 4;
