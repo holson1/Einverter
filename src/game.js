@@ -38,6 +38,11 @@ function create() {
     // Initialize the scoring
     game.score = 0;
     game.level = 1;
+    game.POP_POINTS = 10;
+    game.multiplier = 1;
+    game.hexMultiplier = 1;
+    game.SHOT_COST = 100;
+    game.ORB_COST = 10;
 
 
     // draw the score area
@@ -63,8 +68,8 @@ function create() {
     }
 
     scoreboard.animations.add('flush', [1, 2, 3, 4, 5, 6, 7, 0], 30, false);
-    scoreboard.text = game.add.text(100, 580, "000000", {
-        font: "15px Courier",
+    scoreboard.text = game.add.text(100, 563, "000000", {
+        font: "25px Courier",
         fill: "#ffffff",
         align: "left"
     });
@@ -187,20 +192,22 @@ function update() {
 
     // update the batteries with their new levels
     // TODO: run these checks only when a shot is fired or a bubble leaves the screen
-
-    // TODO: batteries should be in a group and game.r, game.g, etc. should be in an array called game.colors[]
-    // This will make it much easier to programmatically update the batteries
     var scaleConstant = batteries.FULL_VAL / 9;
 
     for (let i = 0; i < batteries.children.length; i++) {
         let battery = batteries.children[i];
         
+        if (battery.val > batteries.MAX_VAL) {
+            battery.val = batteries.MAX_VAL;
+        }
+
         if (battery.val >= batteries.FULL_VAL) {
             battery.frame = 8;
             battery.tint = (battery.tint == '0xffffff' ? battery.defaultTint : '0xffffff');
         }
         else {
             battery.frame = Math.floor(battery.val / scaleConstant);
+            battery.tint = battery.defaultTint;
         }
     }
 
@@ -231,7 +238,12 @@ function update() {
 
     // update the scoreboard
     // TODO: make this a function
-    scoreboard.text.setText(game.score + " lvl: " + game.level);
+    var combo = game.multiplier - 1;
+    var scoreText = game.score + " lvl: " + game.level;
+    if (combo > 1) {
+        scoreText += " " + combo + " COMBO!!";
+    }
+    scoreboard.text.setText(scoreText);
     
 }
 
@@ -249,9 +261,12 @@ function render () {
 }
 
 function collisionHandler(shot, orb) {
-    if (shot.active) {
+    if (shot.active && orb.active) {
+
+        var pointsToAdd = game.POP_POINTS;
 
         // critical hit
+        console.log("CRIT");
         if ((orb.y + (orb.height / 2) - 8 <= shot.y && shot.y <= orb.y + (orb.height / 2)) || shot.critical)  {
             shot.critical = true;
             shot.body.velocity.x = 100;
@@ -261,49 +276,51 @@ function collisionHandler(shot, orb) {
                 crit.play();
             }
             game.stage.backgroundColor = orb.tint;
+            game.multiplier++;
+            game.hexMultiplier += .25;
+            pointsToAdd = pointsToAdd * game.multiplier;
+
 
             setTimeout(function() {
-                    shot.kill();
+                    shot.destroy();
                     orb.animations.play('pop');
                     game.stage.backgroundColor = 0x000000;
+                    game.multiplier = 1;
+                    game.hexMultiplier = 1;
             }, 400);
         }
         // normal hit
         else {
+            console.log("NORM");
             shot.active = false;
             orb.body.velocity.y = 0;
             shot.body.velocity.x = 100;
             setTimeout(function() {
-                shot.kill();
+                shot.destroy();
             }, 10);
             pop.play();
             orb.animations.play('pop');
         }
 
+        orb.active = false;
         scoreboard.animations.play('flush');
 
-        // TODO: make critical add to rgb values properly
         // TODO: implement critical combo system
-        if (shot.critical) {
-            game.score += 1;
+        // TODO: make this a function
+        // strip rgb values
+        var hexStr = ("000000" + (+orb.tint).toString(16)).slice(-6);
+        var hexArr = [hexStr.substring(0, 2),
+                        hexStr.substring(2, 4),
+                        hexStr.substring(4)]
+
+
+        for (let i = 0; i < batteries.children.length; i++) {
+            var convertedVal = parseInt("0x" + hexArr[i]);
+            convertedVal *= game.hexMultiplier;
+            batteries.children[i].val += convertedVal;
         }
-        else {
-            // TODO: make this a function
-            // strip rgb values
-            var hexStr = ("000000" + (+orb.tint).toString(16)).slice(-6);
-            var hexArr = [hexStr.substring(0, 2),
-                          hexStr.substring(2, 4),
-                          hexStr.substring(4)]
 
-            console.log(hexArr);
-
-            for (let i = 0; i < batteries.children.length; i++) {
-                var convertedVal = parseInt("0x" + hexArr[i]);
-                batteries.children[i].val += convertedVal;
-            }
-
-            game.score += 10;
-        }
+        game.score += pointsToAdd;
     }
 }
 
@@ -324,7 +341,7 @@ function shoot(shots) {
         // TODO: make these constants
         // 100 seems balanced
         for (let i = 0; i < batteries.children.length; i++) {
-            batteries.children[i].val -=50;
+            batteries.children[i].val -=game.SHOT_COST;
         }
 
         // draw the shot - ideally when the animation ends
@@ -385,7 +402,15 @@ function spawnOrb() {
     anim.onComplete.add(destroySprite, this);
 
     orb.checkWorldBounds = true;
+    // TODO: orb missed function
+    orb.events.onOutOfBounds.add(function() {
+        for (let i = 0; i < batteries.children.length; i++) {
+            batteries.children[i].val -= game.ORB_COST;
+        }
+    }, this);
     orb.events.onOutOfBounds.add(destroySprite, this);
+
+    orb.active = true;
 }
 
 // standard destroy function
