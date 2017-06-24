@@ -1,3 +1,8 @@
+@font-face {
+    font-family: Unibody-reg;
+    src: url(/fonts/Unibody8Pro-Regular.otf);
+}
+
 body {
     background-color: white;
 }
@@ -5,4 +10,10 @@ body {
 canvas {
     margin-left: auto;
     margin-right: auto;
+}
+
+.font-test{
+    font-family: Unibody-reg;
+    visibility: hidden;
+    position: absolute;
 }

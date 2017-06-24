@@ -27,7 +27,7 @@ var menuState = {
         game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
 
         game.add.text(100, 563, "Click to start", {
-            font: "25px Courier",
+            font: "25px Unibody-reg",
             fill: "#ffffff",
             align: "left"
         });

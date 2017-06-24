@@ -34,8 +34,8 @@ var playState = {
         }
 
         scoreboard.animations.add('flush', [1, 2, 3, 4, 5, 6, 7, 0], 30, false);
-        scoreboard.text = game.add.text(100, 563, "000000", {
-            font: "25px Courier",
+        scoreboard.text = game.add.text(100, 555, "000000", {
+            font: "25px Unibody-reg",
             fill: "#ffffff",
             align: "left"
         });
