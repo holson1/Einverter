@@ -11,7 +11,6 @@ var playState = {
         game.SHOT_COST = 100;
         game.ORB_COST = 10;
 
-
         // draw the score area
         scoreboard = game.add.sprite(0, 550, 'scoreboard', 0);
 
@@ -100,7 +99,6 @@ var playState = {
         // EVENT HANDLERS
         // left mouse button pressed
         game.input.activePointer.leftButton.onDown.add(function() {
-            //console.log("mouse pressed");
             player.animations.play('draw');
             // this is a sound - could use sound manager obj here
             draw.play();
@@ -110,8 +108,6 @@ var playState = {
         // left mouse button released
         game.input.activePointer.leftButton.onUp.add(function() {
             player.animations.play('shoot');
-            //console.log("mouse released");
-
             if (player.ready) {
                 player.shoot(shots);      
             }
@@ -121,10 +117,7 @@ var playState = {
 
     update: function() {
 
-        /*
-        PLAYER POSITION
-        */
-
+        // PLAYER POSITION
         var pos = game.input.activePointer.position;
 
         // bottom bound
@@ -140,10 +133,8 @@ var playState = {
             player.y = pos.y - (player.height / 2);
         }
 
-
         // check to see if an arrow collides with an orb
         game.physics.arcade.overlap(shots, orbs, collisionHandler, null, this);
-
 
         // create an orb
         if (orbs.spawnClock == 0) {
