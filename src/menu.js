@@ -23,9 +23,12 @@ var menuState = {
     },
     create: function() {
 
+        game.world.borderHeight = 600;
+
         // disable right-click
         game.canvas.oncontextmenu = function (e) { e.preventDefault(); }
 
+        // load all text
         this.titleText = game.add.text(250, 150, "RAINBOW ARCHERY", {
             font: "40px Unibody-reg",
             fill: "#ffffff",
@@ -56,6 +59,8 @@ var menuState = {
         this.time_since_update = game.time.now;
 
         // sounds for title
+        draw = game.add.audio('draw');
+        fire = game.add.audio('fire');
         crit = game.add.audio('crit');
 
         // title music
@@ -72,48 +77,46 @@ var menuState = {
             }
         }, this);
 
-
-        // The player and its settings
         player = game.add.sprite(0, (game.world.borderHeight / 2), 'bow', 0);
         player.ready = false;
         player.shoot = shoot;
 
-        //  We're going to be using physics, so enable the Arcade Physics system
         game.physics.startSystem(Phaser.Physics.ARCADE);
 
-        //  We need to enable physics on the player
         game.physics.arcade.enable(player);
+        game.physics.arcade.enable(this.startText);
 
-        // player animations
         drawAnim = player.animations.add('draw', [0, 1, 2, 3, 4, 5, 6, 7], 30, false);
         drawAnim.onComplete.add(bowDrawn, this);
         player.animations.add('shoot', [11, 12, 13], 30, false);
 
-        // set up shots
         shots = game.add.group();
         shots.enableBody = true;
         shots.physicsBodyType = Phaser.Physics.ARCADE;
 
-        //click to start the game
-        this.starting = false;
         game.input.activePointer.leftButton.onDown.add(function() {
-            if (!this.starting) {
-                this.starting = true;
-                crit.play();
-                titleTheme.fadeOut(1000);
-
-                setTimeout(function() {
-                    titleTheme.pause();
-                }, 1000);
-
-                setTimeout(function() {
-                    game.state.start('play');
-                }, 1500);
-            }
+            player.animations.play('draw');
+            draw.play();
         }, this);
+
+        game.input.activePointer.leftButton.onUp.add(function() {
+            player.animations.play('shoot');
+            if (player.ready) {
+                player.shoot(shots);      
+            }
+            
+        }, this);
+
+        this.starting = false;
     },
 
     update: function() {
+        updatePosition(player);
+
+        // check to see if we can start the game
+         game.physics.arcade.overlap(shots, this.startText, startGame, null, this);
+
+
         // cycle through rainbow colors
         if (game.time.now - this.time_since_update > 200) {
             for (let i = 0; i < 7; i++) {
@@ -129,4 +132,26 @@ var menuState = {
         game.add.tween(this.subtitleText).to( { alpha: 1}, 500, "Linear", true);
         game.add.tween(this.startText).to( { alpha: 1}, 500, "Linear", true);
     }
+};
+
+function startGame(startText, shot) {
+    if (!this.starting) {
+        this.starting = true;
+        crit.play();
+        titleTheme.fadeOut(1000);
+
+        shot.body.velocity.x = 200;
+        startText.body.velocity.x = 50;
+
+        setTimeout(function() {
+            titleTheme.pause();
+        }, 1000);
+
+        setTimeout(function() {
+            shot.destroy();
+            game.stage.backgroundColor = 0x000000;
+            game.state.start('play');
+        }, 1500);
+    }
+    game.stage.backgroundColor = this.rainbow_colors[this.rainbow_idx % this.rainbow_colors.length];
 };

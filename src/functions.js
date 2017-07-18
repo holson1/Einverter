@@ -146,8 +146,38 @@ function destroySprite(sprite) {
 
 function onShotOOB(sprite) {
     // detract score
-    for (let i = 0; i < batteries.children.length; i++) {
-        batteries.children[i].val -=game.SHOT_COST;
+    if (batteries) {
+        for (let i = 0; i < batteries.children.length; i++) {
+            batteries.children[i].val -=game.SHOT_COST;
+        }
     }
     destroySprite(sprite);
 };
+
+// update the player position to match the mouse
+function updatePosition(player) {
+    var pos = game.input.activePointer.position;
+
+    // bottom bound
+    if (pos.y > game.world.borderHeight - (player.height / 2)) {
+        player.y = game.world.borderHeight - player.height;
+    }
+    // top bound
+    else if (pos.y < player.height / 2) {
+        player.y = 0;
+    }
+    // otherwise
+    else {
+        player.y = pos.y - (player.height / 2);
+    }
+}
+
+// update the scoreboard
+function updateScoreboard(scoreboard) {
+    var combo = game.multiplier - 1;
+    var scoreText = game.score + " lvl: " + game.level;
+    // if (combo > 1) {
+    //     scoreText += " " + combo + " COMBO!!";
+    // }
+    scoreboard.text.setText(scoreText);
+}

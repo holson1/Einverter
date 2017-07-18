@@ -73,7 +73,6 @@ var playState = {
         */
 
         // TODO: add a sound manager object here
-
         pop = game.add.audio('pop');
         crit = game.add.audio('crit');
         draw = game.add.audio('draw');
@@ -85,10 +84,8 @@ var playState = {
         mainTheme = game.add.audio('mainTheme')
         mainTheme.addMarker('intro', 0, 40.425);
         mainTheme.addMarker('loop', 40.425, 103.575, 1, true);
-
         // TODO: allow user to disable music
         mainTheme.play('intro');
-
         // play the loop only after the intro
         mainTheme.onStop.add(function() {
             if (mainTheme.currentMarker !== 'loop') {
@@ -100,7 +97,6 @@ var playState = {
         // left mouse button pressed
         game.input.activePointer.leftButton.onDown.add(function() {
             player.animations.play('draw');
-            // this is a sound - could use sound manager obj here
             draw.play();
         }, this);
 
@@ -117,21 +113,7 @@ var playState = {
 
     update: function() {
 
-        // PLAYER POSITION
-        var pos = game.input.activePointer.position;
-
-        // bottom bound
-        if (pos.y > game.world.borderHeight - (player.height / 2)) {
-            player.y = game.world.borderHeight - player.height;
-        }
-        // top bound
-        else if (pos.y < player.height / 2) {
-            player.y = 0;
-        }
-        // otherwise
-        else {
-            player.y = pos.y - (player.height / 2);
-        }
+        updatePosition(player);
 
         // check to see if an arrow collides with an orb
         game.physics.arcade.overlap(shots, orbs, collisionHandler, null, this);
@@ -194,13 +176,7 @@ var playState = {
         game.world.bringToTop(batteries);
 
         // update the scoreboard
-        // TODO: make this a function
-        var combo = game.multiplier - 1;
-        var scoreText = game.score + " lvl: " + game.level;
-        if (combo > 1) {
-            scoreText += " " + combo + " COMBO!!";
-        }
-        scoreboard.text.setText(scoreText);
+        updateScoreboard(scoreboard);
     },
 
     // debugging stuff
