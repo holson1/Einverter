@@ -24,7 +24,7 @@ var menuState = {
     },
     create: function() {
 
-        game.highScore = 0;
+        game.highScore = localStorage.getItem('highScore') || 0;
         game.world.borderHeight = 600;
 
         // disable right-click

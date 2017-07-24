@@ -92,6 +92,11 @@ function createShot(y, shots) {
 // orbs.spawnOrb
 function spawnOrb() {
     var rand_nums = Array.from({length: 4}, () => Math.random());
+    // [0] -> x pos
+    // [1] -> y velocity
+    // [2] -> tint/alpha
+    // [3] -> scale
+
 
     var orb = this.create(400 + (rand_nums[0] * 540), game.world.borderHeight, 'orb', 0);
     orb.body.setCircle(24, 23, 22);
@@ -117,13 +122,11 @@ function spawnOrb() {
     }
     
     // scale the orb to a random value
-    //var scale = Math.max(rand_num * 1.5, 1);
-    //orb.scale.setTo(scale, scale);
+    var scale = Math.max(rand_nums[3] * 1.3, 1);
+    orb.scale.setTo(scale, scale);
 
-    // TODO: set a new random value for color (so color and speed/size aren't tied together)
     orb.tint = Math.floor(rand_nums[2] * 0xffffff);
-    // maybe here too
-    orb.alpha = Math.max(rand_nums[3], 0.4);
+    orb.alpha = Math.max(rand_nums[2], 0.4);
     var anim = orb.animations.add('pop', [1, 2, 3, 4, 5], 30, false);
     anim.onComplete.add(destroySprite, this);
 

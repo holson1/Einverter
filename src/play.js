@@ -18,7 +18,7 @@ var playState = {
         // batteries object holds information on each battery
         batteries = game.add.group();
         batteries.HEIGHT = 555;
-        batteries.START_VAL = 1000;
+        batteries.START_VAL = 800;
         batteries.FULL_VAL = 2000;
         batteries.MAX_VAL = 2300;
 
@@ -97,7 +97,6 @@ var playState = {
         // EVENT HANDLERS
         // left mouse button pressed
         game.input.activePointer.leftButton.onDown.add(function() {
-            console.log(game.input.activePointer.leftButton.onDown);
             player.animations.play('draw');
             draw.play();
         }, this);
@@ -163,6 +162,7 @@ var playState = {
             gameover.play();
             mainTheme.pause();
             game.highScore = game.score >= game.highScore ? game.score : game.highScore;
+            localStorage.setItem('highScore', game.highScore);
             game.camera.onFadeComplete.add(function() {
                 game.state.start('gameover');
             } ,this);
