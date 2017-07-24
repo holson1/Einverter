@@ -1,5 +1,6 @@
 var playState = {
     create: function() {
+        this.dying = false;
         game.world.borderHeight = 550;
 
         // Initialize the scoring
@@ -96,6 +97,7 @@ var playState = {
         // EVENT HANDLERS
         // left mouse button pressed
         game.input.activePointer.leftButton.onDown.add(function() {
+            console.log(game.input.activePointer.leftButton.onDown);
             player.animations.play('draw');
             draw.play();
         }, this);
@@ -154,10 +156,16 @@ var playState = {
         }
 
         // GAME OVER
-        if (gameOver) {
+        if (gameOver && !this.dying) {
+            this.dying = true;
+            game.camera.fade('#000000', 2700);
+            player.destroy();
             gameover.play();
             mainTheme.pause();
-            game.state.start('gameover');
+            game.highScore = game.score >= game.highScore ? game.score : game.highScore;
+            game.camera.onFadeComplete.add(function() {
+                game.state.start('gameover');
+            } ,this);
         }
 
         // LEVEL UP

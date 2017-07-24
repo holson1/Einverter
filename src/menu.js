@@ -20,9 +20,11 @@ var menuState = {
         game.load.audio('fire', 'sound/fire.wav');
         game.load.audio('levelup', 'sound/levelup.wav');
         game.load.audio('gameover', 'sound/gameover.wav');
+        game.load.audio('textAppear', 'sound/text.wav');
     },
     create: function() {
 
+        game.highScore = 0;
         game.world.borderHeight = 600;
 
         // disable right-click
