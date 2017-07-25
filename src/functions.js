@@ -101,25 +101,20 @@ function spawnOrb() {
     var orb = this.create(400 + (rand_nums[0] * 540), game.world.borderHeight, 'orb', 0);
     orb.body.setCircle(24, 23, 22);
 
-    var levelFactor = 20 * game.level;
+    var pattern = patterns[game.level % patterns.length];
+    var levelFactor = Math.floor(game.level / patterns.length) * 80;
+    var levelFactorX = pattern.xVMin === 0 ? 0 : levelFactor;
+    var levelFactorY = pattern.yVMin === 0 ? 0 : levelFactor;
+    orb.body.velocity.x =
+        Math.min((rand_nums[1] * pattern.xVMin - levelFactorX), pattern.xVMax - levelFactorX);
+    orb.body.velocity.y =
+        Math.min((rand_nums[1] * pattern.yVMin) - levelFactorY, pattern.yVMax - levelFactorY);
+    orb.body.acceleration.x = pattern.xA;
+    orb.body.acceleration.y = pattern.yA;
+    this.spawnClock = pattern.spawnClock;
 
-    // TODO: define these patterns in a JSON file and read them for each level
-    // ex:
-    // patternIndex = (game.level % num_patterns)
-    // values = loadFromJson(pattern=patternIndex)
+    console.log(levelFactor);
 
-    // PATTERN 3
-    if (game.level % 3 == 0) {
-        orb.body.velocity.x = -100;
-        orb.body.velocity.y = -255;
-        orb.body.acceleration.x = 60;
-        this.spawnClock = 10;
-    }
-    // PATTERN 1
-    else if (game.level % 1 == 0) {
-        orb.body.velocity.y = Math.min((rand_nums[1] * -130) - levelFactor, -30 - levelFactor);
-        this.spawnClock = 25;
-    }
     
     // scale the orb to a random value
     var scale = Math.max(rand_nums[3] * 1.3, 1);

@@ -86,7 +86,7 @@ var playState = {
         mainTheme.addMarker('intro', 0, 40.425);
         mainTheme.addMarker('loop', 40.425, 103.575, 1, true);
         // TODO: allow user to disable music
-        mainTheme.play('intro');
+        //mainTheme.play('intro');
         // play the loop only after the intro
         mainTheme.onStop.add(function() {
             if (mainTheme.currentMarker !== 'loop') {

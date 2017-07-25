@@ -69,7 +69,7 @@ var menuState = {
         titleTheme = game.add.audio('titleTheme');
         titleTheme.addMarker('intro', 0, 34.914);
         titleTheme.addMarker('loop', 34.914, 34.904, 1, true);
-        titleTheme.play('intro');
+        //titleTheme.play('intro');
 
         //play the loop only after the intro
         titleTheme.onStop.add(function() {
