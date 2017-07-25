@@ -1,7 +1,7 @@
 function collisionHandler(shot, orb) {
     if (shot.active && orb.active) {
 
-        var pointsToAdd = game.POP_POINTS;
+        var pointsToAdd = Math.floor(game.POP_POINTS * (1 + (game.LEVEL_UP_MULTIPLIER * (game.level - 1))));
 
         // critical hit
         if ((orb.y + (orb.height / 2) - 8 <= shot.y && shot.y <= orb.y + (orb.height / 2)) || shot.critical)  {
@@ -112,8 +112,6 @@ function spawnOrb() {
     orb.body.acceleration.x = pattern.xA;
     orb.body.acceleration.y = pattern.yA;
     this.spawnClock = pattern.spawnClock;
-
-    console.log(levelFactor);
 
     
     // scale the orb to a random value

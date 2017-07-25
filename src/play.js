@@ -9,8 +9,10 @@ var playState = {
         game.POP_POINTS = 10;
         game.multiplier = 1;
         game.hexMultiplier = 1;
-        game.SHOT_COST = 100;
-        game.ORB_COST = 10;
+        game.SHOT_COST = 200;
+        game.ORB_COST = 25;
+        game.LEVEL_UP_MULTIPLIER = .1;
+        game.LEVEL_UP_BONUS = 400;
 
         // draw the score area
         scoreboard = game.add.sprite(0, 550, 'scoreboard', 0);
@@ -18,9 +20,9 @@ var playState = {
         // batteries object holds information on each battery
         batteries = game.add.group();
         batteries.HEIGHT = 555;
-        batteries.START_VAL = 800;
-        batteries.FULL_VAL = 2000;
-        batteries.MAX_VAL = 2300;
+        batteries.START_VAL = 1000;
+        batteries.FULL_VAL = 3000;
+        batteries.MAX_VAL = 3300;
 
         battery_config = [
             {'tint': 0xff0000, 'x': 515},
@@ -86,7 +88,7 @@ var playState = {
         mainTheme.addMarker('intro', 0, 40.425);
         mainTheme.addMarker('loop', 40.425, 103.575, 1, true);
         // TODO: allow user to disable music
-        //mainTheme.play('intro');
+        mainTheme.play('intro');
         // play the loop only after the intro
         mainTheme.onStop.add(function() {
             if (mainTheme.currentMarker !== 'loop') {
@@ -171,6 +173,7 @@ var playState = {
         // LEVEL UP
         if (canLevelUp) {
             levelup.play();
+            game.score += game.LEVEL_UP_BONUS;
             game.level++;
 
             for (let i = 0; i < batteries.children.length; i++) {
