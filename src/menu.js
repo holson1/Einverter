@@ -73,7 +73,6 @@ var menuState = {
 
         //play the loop only after the intro
         titleTheme.onStop.add(function() {
-            console.log(titleTheme.currentMarker);
             if (titleTheme.currentMarker !== 'loop') {
                 titleTheme.play('loop');
             }
