@@ -9,8 +9,9 @@ var playState = {
         game.POP_POINTS = 10;
         game.multiplier = 1;
         game.hexMultiplier = 1;
-        game.SHOT_COST = 230;
-        game.ORB_COST = 30;
+        game.SHOT_COST = 20;
+        game.SHOT_MISS_COST = 190;
+        game.ORB_COST = 35;
         game.LEVEL_UP_MULTIPLIER = .1;
         game.LEVEL_UP_BONUS = 400;
 
@@ -20,7 +21,7 @@ var playState = {
         // batteries object holds information on each battery
         batteries = game.add.group();
         batteries.HEIGHT = 555;
-        batteries.START_VAL = 1000;
+        batteries.START_VAL = 1200;
         batteries.FULL_VAL = 3000;
         batteries.MAX_VAL = 3300;
 

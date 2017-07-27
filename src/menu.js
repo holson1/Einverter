@@ -6,7 +6,7 @@ var menuState = {
         game.load.spritesheet('orb', 'img/orb_sheet.png', 96, 96, 6);
         game.load.image('shot', 'img/shot_small.png');
         game.load.image('particle', 'img/particle.png');
-        game.load.spritesheet('scoreboard', 'img/scoreboard-sheet.png', 1000, 50, 8);
+        game.load.spritesheet('scoreboard', 'img/scoreboard-Sheet.png', 1000, 50, 8);
         game.load.spritesheet('battery', 'img/battery-sheet.png', 105, 40, 9);
 
         // music

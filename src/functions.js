@@ -74,6 +74,11 @@ function shoot(shots) {
         var y = (this.height / 2) + this.y - 4;
         fire.play();
         createShot(y, shots);
+        if (batteries) {
+            for (let i = 0; i < batteries.children.length; i++) {
+                batteries.children[i].val -=game.SHOT_COST;
+            }
+        }   
         this.ready = false;
     }
 };
@@ -144,7 +149,7 @@ function onShotOOB(sprite) {
     // detract score
     if (batteries) {
         for (let i = 0; i < batteries.children.length; i++) {
-            batteries.children[i].val -=game.SHOT_COST;
+            batteries.children[i].val -=game.SHOT_MISS_COST;
         }
     }
     destroySprite(sprite);
