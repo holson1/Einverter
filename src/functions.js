@@ -119,7 +119,7 @@ function spawnOrb() {
     orb.scale.setTo(scale, scale);
 
     orb.tint = Math.floor(rand_nums[2] * 0xffffff);
-    orb.alpha = Math.max(rand_nums[2], 0.4);
+    orb.alpha = Math.max(rand_nums[2], 0.5);
     var anim = orb.animations.add('pop', [1, 2, 3, 4, 5], 30, false);
     anim.onComplete.add(destroySprite, this);
 

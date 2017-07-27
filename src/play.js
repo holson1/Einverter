@@ -9,8 +9,8 @@ var playState = {
         game.POP_POINTS = 10;
         game.multiplier = 1;
         game.hexMultiplier = 1;
-        game.SHOT_COST = 200;
-        game.ORB_COST = 25;
+        game.SHOT_COST = 230;
+        game.ORB_COST = 30;
         game.LEVEL_UP_MULTIPLIER = .1;
         game.LEVEL_UP_BONUS = 400;
 
